@@ -1043,4 +1043,6 @@ class Subscriber:
                         events["event"]["attributes"][0 if self._event == SubEvent.NewRecord else 1]
                         in self._target_address
                     ):
-                        self._callback(events["event"]["attributes"])  # address-targeted
+                        block_num = index_obj["header"]["number"]
+                        event_id = "{}-{}".format(block_num, events["extrinsic_idx"])
+                        self._callback(events["event"]["attributes"], event_id)  # address-targeted
