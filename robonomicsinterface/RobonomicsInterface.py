@@ -1,5 +1,7 @@
 import hashlib
 import logging
+import time
+import os
 
 import substrateinterface as substrate
 import typing as tp
@@ -1033,8 +1035,23 @@ class Subscriber:
 
         """
 
+        MAX_RETRY = os.environ.get("ROBONOMICS_INTERFACE_CONNECTION_MAX_RETRY", 10)
+
+        def get_chain_events(attempt=1):
+            try:
+                chain_events: list = self._subscriber_interface.custom_chainstate("System", "Events")
+                return chain_events
+            except Exception as e:
+                print("ROBONOMICS INTERFACE get_chain_events attempt {}, exception:".format(attempt))
+                print(e)
+                time.sleep(1)
+                if (attempt > MAX_RETRY):
+                    raise e
+                return get_chain_events(attempt + 1)
+
         if update_nr != 0:
-            chain_events: list = self._subscriber_interface.custom_chainstate("System", "Events")
+            chain_events: list = get_chain_events()
+
             for events in chain_events:
                 if events["event_id"] == self._event.value:
                     if self._target_address is None:
